@@ -116,41 +116,5 @@ python manage.py runserver
 Buka browser dan akses alamat:
 👉 **`http://127.0.0.1:8000/`**
 
-*(Di Windows, Anda juga bisa langsung menjalankan aplikasi cukup dengan **klik dua kali `run_django.bat`**).*
+*(Di Windows, Anda juga bisa langsung menjalankan aplikasi cukup dengan **klik kanan pada file `run_django.bat`** lalu pilih **Run code**).*
 
----
-
-## 📁 Struktur Direktori Proyek
-
-```plaintext
-.
-├── Sleep_health_and_lifestyle_dataset.csv  # Dataset klinis kesehatan tidur (374 baris)
-├── train.py                                # Skrip pelatihan & evaluasi 3 model ML
-├── model_tidur.joblib                      # File bobot model Random Forest terbaik
-├── app.py                                  # Opsi antarmuka Streamlit alternatif
-├── manage.py                               # CLI entrypoint Django
-├── .env.example                            # Template file konfigurasi lingkungan
-├── .env                                    # File konfigurasi lokal (tidak di-upload ke git)
-├── .gitignore                              # Konfigurasi file yang diabaikan Git
-├── run_django.bat                          # File launcher cepat aplikasi Django
-├── run_streamlit.bat                       # File launcher cepat aplikasi Streamlit
-├── sleep_project/                          # Konfigurasi inti proyek Django
-│   ├── settings.py                         # Pengaturan Django
-│   ├── urls.py                             # Root routing
-│   ├── wsgi.py
-│   └── asgi.py
-├── predictor/                              # Aplikasi utama analisis tidur
-│   ├── models.py                           # Model database SleepPrediction
-│   ├── views.py                            # Logika inferensi, kalkulasi BMI, & endpoint API
-│   ├── ai_services.py                      # Integrasi Gemini REST API & Smart Fallback
-│   ├── urls.py                             # Routing URL modul & API AJAX
-│   └── templates/predictor/index.html      # Tampilan UI Kalkulator, Hipnogram, & Chatbot
-├── db.sqlite3                              # Database SQLite pencatat riwayat
-└── README.md                               # Dokumentasi komprehensif proyek
-```
-
----
-
-## 📝 Lisensi & Catatan Akademik
-Proyek ini dikembangkan untuk keperluan akademik mata kuliah **Sistem Cerdas**.  
-*Alat bantu skrining awal dan edukasi pola tidur, bukan pengganti pemeriksaan medis profesional.*
