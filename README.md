@@ -63,7 +63,7 @@ Model dilatih menggunakan dataset klinis **374 responden terverifikasi** dengan 
 
 ## 🚀 Panduan Instalasi & Menjalankan
 
-### 1. Prasyarat
+### 1.
 Pastikan Python 3.10+ sudah terpasang. Instal dependensi:
 ```bash
 pip install django pandas scikit-learn joblib requests
