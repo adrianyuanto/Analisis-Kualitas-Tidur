@@ -36,8 +36,8 @@ def call_gemini_api(prompt, system_instruction=""):
     if not api_key or api_key == "masukkan_api_key_gemini_kamu_disini":
         return None
 
-    # Model aktif Google AI Studio
-    active_models = ["gemini-3-flash-preview", "gemini-3.1-flash-lite", "gemini-flash-latest"]
+    # Model aktif Google AI Studio (Prioritas: gemini-3.1-flash-lite untuk kecepatan tinggi & kuota token besar)
+    active_models = ["gemini-3.1-flash-lite", "gemini-3-flash-preview", "gemini-flash-latest"]
     headers = {"Content-Type": "application/json"}
     
     full_prompt = prompt
@@ -50,7 +50,7 @@ def call_gemini_api(prompt, system_instruction=""):
         }],
         "generationConfig": {
             "temperature": 0.4,
-            "maxOutputTokens": 2048,
+            "maxOutputTokens": 4096,
             "thinkingConfig": {"thinkingBudget": 0}
         }
     }
