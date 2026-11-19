@@ -1,0 +1,2443 @@
+{% load l10n %}
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sistem Analisis Tidur – Analisis pola tidur</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --night: #11252D;
+            --night-2: #1C3844;
+            --ink: #1B2A31;
+            --ink-soft: #485960;
+            --ink-faint: #74848B;
+            --paper: #F2F5F3;
+            --sheet: #FFFFFF;
+            --line: #D8DFDB;
+            --track: #D3DAD6;
+            --teal: #1F5E66;
+            --teal-dark: #174850;
+            --amber: #E5A93B;
+            --ok: #2F7352;
+            --ok-bg: #E2F0E8;
+            --warn: #9A5F0C;
+            --warn-bg: #F7ECD4;
+            --bad: #A93B2A;
+            --bad-bg: #F7E2DD;
+            --f-display: 'Bricolage Grotesque', 'Hanken Grotesk', system-ui, sans-serif;
+            --f-body: 'Hanken Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html {
+            scroll-behavior: smooth
+        }
+
+        body {
+            margin: 0;
+            background: var(--paper);
+            color: var(--ink);
+            font: 400 16px/1.6 var(--f-body);
+            -webkit-font-smoothing: antialiased
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: var(--f-display);
+            margin: 0;
+            line-height: 1.15;
+            letter-spacing: -.01em;
+            font-weight: 600
+        }
+
+        p {
+            margin: 0
+        }
+
+        button {
+            font: inherit;
+            color: inherit
+        }
+
+        [hidden] {
+            display: none !important
+        }
+
+        .wrap {
+            max-width: 1160px;
+            margin: 0 auto;
+            padding: 0 24px
+        }
+
+        :focus-visible {
+            outline: 3px solid var(--amber);
+            outline-offset: 2px
+        }
+
+        .num {
+            font-variant-numeric: tabular-nums
+        }
+
+        /* ---------- Masthead ---------- */
+        .masthead {
+            background: var(--night);
+            color: #E6EDEB
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px 32px;
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .1);
+            flex-wrap: wrap
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #fff;
+            text-decoration: none;
+            font: 700 21px/1 var(--f-display);
+            letter-spacing: -.01em
+        }
+
+        .brand svg {
+            width: 38px;
+            height: 24px;
+            flex: none
+        }
+
+        .tabs {
+            display: flex;
+            gap: 2px;
+            overflow-x: auto;
+            margin: 0 -8px;
+            padding: 0 8px;
+            scrollbar-width: none
+        }
+
+        .tabs::-webkit-scrollbar {
+            display: none
+        }
+
+        .tab {
+            background: none;
+            border: 0;
+            border-bottom: 3px solid transparent;
+            color: #A5B8B8;
+            padding: 10px 14px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            white-space: nowrap
+        }
+
+        .tab:hover {
+            color: #fff
+        }
+
+        .tab[aria-selected="true"] {
+            color: #fff;
+            border-bottom-color: var(--amber)
+        }
+
+        .hero {
+            padding: 44px 0 0
+        }
+
+        .hero h1 {
+            font-size: clamp(32px, 5.2vw, 54px);
+            color: #fff;
+            font-weight: 700;
+            max-width: 20ch
+        }
+
+        .hero p {
+            max-width: 62ch;
+            margin-top: 14px;
+            color: #B6C6C5;
+            font-size: 18px;
+            line-height: 1.55
+        }
+
+        .hypno-band {
+            display: block;
+            width: 100%;
+            height: 92px;
+            margin-top: 26px
+        }
+
+        .hypno-band path {
+            vector-effect: non-scaling-stroke
+        }
+
+        /* ---------- Layout ---------- */
+        main {
+            padding-bottom: 56px
+        }
+
+        .panel {
+            padding-top: 40px
+        }
+
+        .calc {
+            display: grid;
+            grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+            gap: 40px;
+            align-items: start
+        }
+
+        .sheet {
+            background: var(--sheet);
+            border: 1px solid var(--line);
+            border-radius: 6px
+        }
+
+        .sheet-pad {
+            padding: 32px
+        }
+
+        .lead {
+            color: var(--ink-soft);
+            margin-bottom: 28px;
+            max-width: 56ch
+        }
+
+        /* ---------- Form ---------- */
+        fieldset {
+            border: 0;
+            padding: 0;
+            margin: 0 0 30px
+        }
+
+        legend {
+            font: 600 21px/1.2 var(--f-display);
+            padding: 0;
+            margin-bottom: 18px;
+            letter-spacing: -.01em
+        }
+
+        .row2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px
+        }
+
+        .field {
+            margin-bottom: 22px
+        }
+
+        .field:last-child {
+            margin-bottom: 0
+        }
+
+        .field-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 12px;
+            margin-bottom: 8px
+        }
+
+        .field-head label,
+        .field-label {
+            font-weight: 600;
+            font-size: 15px
+        }
+
+        .field-value {
+            font: 600 19px/1 var(--f-display);
+            color: var(--teal);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap
+        }
+
+        .scale {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--ink-faint);
+            margin-top: 6px
+        }
+
+        .hint {
+            font-size: 13.5px;
+            color: var(--ink-soft);
+            margin-top: 4px
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 22px;
+            margin: 0;
+            background: linear-gradient(to right, var(--teal) var(--p, 50%), var(--track) var(--p, 50%)) center/100% 4px no-repeat;
+            border-radius: 2px;
+            cursor: pointer
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid var(--teal);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, .2)
+        }
+
+        input[type=range]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid var(--teal)
+        }
+
+        input[type=range]::-moz-range-track {
+            background: transparent
+        }
+
+        .ideal {
+            position: relative;
+            height: 14px;
+            margin-top: 2px
+        }
+
+        .ideal i {
+            position: absolute;
+            top: 0;
+            height: 5px;
+            background: var(--ok);
+            border-radius: 0 0 3px 3px
+        }
+
+        .ideal span {
+            position: absolute;
+            top: 6px;
+            font-size: 12.5px;
+            color: var(--ok);
+            font-weight: 600;
+            white-space: nowrap;
+            transform: translateX(-50%)
+        }
+
+        .seg {
+            display: grid;
+            gap: 8px
+        }
+
+        .seg.g2 {
+            grid-template-columns: 1fr 1fr
+        }
+
+        .seg.g4 {
+            grid-template-columns: repeat(4, 1fr)
+        }
+
+        .seg-btn {
+            background: #fff;
+            border: 1px solid #B9C4C0;
+            border-radius: 4px;
+            padding: 10px 8px;
+            cursor: pointer;
+            text-align: center;
+            line-height: 1.3;
+            font-weight: 600;
+            transition: background-color .15s, border-color .15s
+        }
+
+        .seg-btn small {
+            display: block;
+            font-weight: 400;
+            font-size: 12.5px;
+            color: var(--ink-soft);
+            margin-top: 2px
+        }
+
+        .seg-btn:hover {
+            border-color: var(--teal)
+        }
+
+        .seg-btn.is-on {
+            background: var(--teal);
+            border-color: var(--teal);
+            color: #fff
+        }
+
+        .seg-btn.is-on small {
+            color: #CFE3E5
+        }
+
+        .unit-input {
+            display: flex;
+            align-items: center;
+            border: 1px solid #B9C4C0;
+            border-radius: 4px;
+            background: #fff;
+            padding-right: 12px
+        }
+
+        .unit-input:focus-within {
+            border-color: var(--teal);
+            box-shadow: 0 0 0 3px rgba(31, 94, 102, .18)
+        }
+
+        .unit-input input {
+            flex: 1;
+            min-width: 0;
+            border: 0;
+            background: transparent;
+            padding: 10px 12px;
+            font: 600 17px var(--f-body);
+            color: var(--ink);
+            outline: 0;
+            font-variant-numeric: tabular-nums
+        }
+
+        .unit-input span {
+            color: var(--ink-soft);
+            font-size: 14px
+        }
+
+        .submit-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            padding-top: 6px;
+            border-top: 1px solid var(--line);
+            margin-top: 6px;
+            padding-top: 24px
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: 0;
+            border-radius: 4px;
+            background: var(--teal);
+            color: #fff;
+            font-weight: 700;
+            font-size: 16px;
+            padding: 14px 26px;
+            cursor: pointer;
+            transition: background-color .15s
+        }
+
+        .btn:hover {
+            background: var(--teal-dark)
+        }
+
+        .btn:disabled {
+            opacity: .65;
+            cursor: progress
+        }
+
+        .submit-row small {
+            color: var(--ink-soft);
+            font-size: 13.5px;
+            max-width: 30ch;
+            line-height: 1.4
+        }
+
+        .btn-text {
+            background: none;
+            border: 0;
+            padding: 0;
+            color: var(--teal);
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 3px
+        }
+
+        .btn-text:hover {
+            color: var(--teal-dark)
+        }
+
+        .notice {
+            border-left: 4px solid var(--bad);
+            background: var(--bad-bg);
+            padding: 12px 16px;
+            margin-bottom: 24px;
+            border-radius: 0 4px 4px 0;
+            font-size: 15px
+        }
+
+        /* ---------- Result ---------- */
+        .result {
+            position: sticky;
+            top: 24px;
+            overflow: hidden
+        }
+
+        .result-empty {
+            padding: 32px
+        }
+
+        .result-empty h2 {
+            font-size: 24px;
+            margin-bottom: 10px
+        }
+
+        .result-empty p {
+            color: var(--ink-soft)
+        }
+
+        .hypno-strip {
+            background: var(--night);
+            padding: 18px 18px 12px
+        }
+
+        .hypno-strip svg {
+            display: block;
+            width: 100%;
+            height: auto
+        }
+
+        .hypno-strip figcaption {
+            font-size: 12.5px;
+            line-height: 1.4;
+            color: #9FB3B3;
+            margin-top: 8px
+        }
+
+        .hypno-strip figure {
+            margin: 0
+        }
+
+        .verdict {
+            padding: 26px 28px 8px
+        }
+
+        .verdict .kicker {
+            font-size: 14px;
+            color: var(--ink-soft)
+        }
+
+        .verdict h2 {
+            font-size: clamp(36px, 5vw, 48px);
+            font-weight: 700;
+            margin: 2px 0 8px;
+            letter-spacing: -.02em
+        }
+
+        .verdict[data-kind="normal"] h2 {
+            color: var(--ok)
+        }
+
+        .verdict[data-kind="insomnia"] h2 {
+            color: var(--warn)
+        }
+
+        .verdict[data-kind="apnea"] h2 {
+            color: var(--bad)
+        }
+
+        .verdict p {
+            color: var(--ink)
+        }
+
+        .verdict .conf {
+            margin-top: 8px;
+            font-size: 14.5px;
+            color: var(--ink-soft)
+        }
+
+        .probs {
+            padding: 8px 28px 4px
+        }
+
+        .probs h3 {
+            font-size: 15px;
+            font-family: var(--f-body);
+            font-weight: 700;
+            margin-bottom: 10px
+        }
+
+        .prob-row {
+            display: grid;
+            grid-template-columns: 96px 1fr 52px;
+            gap: 12px;
+            align-items: center;
+            padding: 5px 0;
+            font-size: 14.5px
+        }
+
+        .prob-row b {
+            font-variant-numeric: tabular-nums;
+            text-align: right
+        }
+
+        .prob-row.top span {
+            font-weight: 700
+        }
+
+        .meter {
+            height: 8px;
+            border-radius: 4px;
+            background: #E6EBE8;
+            overflow: hidden
+        }
+
+        .meter i {
+            display: block;
+            height: 100%;
+            border-radius: 4px;
+            background: var(--ink-faint)
+        }
+
+        .meter i[data-k="Normal"] {
+            background: var(--ok)
+        }
+
+        .meter i[data-k="Insomnia"] {
+            background: var(--warn)
+        }
+
+        .meter i[data-k="Sleep Apnea"] {
+            background: var(--bad)
+        }
+
+        .result-foot {
+            padding: 14px 28px 24px;
+            display: grid;
+            gap: 12px
+        }
+
+        .disclaimer {
+            font-size: 13.5px;
+            color: var(--ink-soft);
+            line-height: 1.45;
+            border-top: 1px solid var(--line);
+            padding-top: 14px
+        }
+
+        /* ---------- Report ---------- */
+        .report {
+            display: grid;
+            grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+            gap: 56px;
+            margin-top: 56px;
+            padding-top: 48px;
+            border-top: 1px solid var(--line)
+        }
+
+        .report h2,
+        .block h2 {
+            font-size: 27px;
+            margin-bottom: 8px
+        }
+
+        .report .sub,
+        .block .sub {
+            color: var(--ink-soft);
+            max-width: 60ch;
+            margin-bottom: 22px
+        }
+
+        .factor {
+            padding: 14px 0;
+            border-top: 1px solid var(--line)
+        }
+
+        .factor:first-of-type {
+            border-top: 0
+        }
+
+        .factor-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: baseline;
+            margin-bottom: 8px
+        }
+
+        .factor-top b {
+            font-weight: 700
+        }
+
+        .factor-top span {
+            color: var(--ink-soft);
+            font-size: 14.5px;
+            margin-left: 8px
+        }
+
+        .factor-top em {
+            font: 700 16px var(--f-display);
+            font-style: normal;
+            font-variant-numeric: tabular-nums
+        }
+
+        .factor.up em {
+            color: var(--bad)
+        }
+
+        .factor.down em {
+            color: var(--ok)
+        }
+
+        .diverge {
+            position: relative;
+            height: 10px;
+            background: #E6EBE8;
+            border-radius: 5px
+        }
+
+        .diverge::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: -3px;
+            bottom: -3px;
+            width: 2px;
+            background: var(--ink-faint)
+        }
+
+        .diverge i {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            border-radius: 5px
+        }
+
+        .factor.up .diverge i {
+            left: 50%;
+            background: var(--bad)
+        }
+
+        .factor.down .diverge i {
+            right: 50%;
+            background: var(--ok)
+        }
+
+        .diverge-legend {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12.5px;
+            color: var(--ink-faint);
+            margin: 6px 0 0
+        }
+
+        .factor p.why {
+            font-size: 14.5px;
+            color: var(--ink-soft);
+            margin-top: 8px
+        }
+
+        .footnote {
+            font-size: 13px;
+            color: var(--ink-faint);
+            margin-top: 14px;
+            max-width: 62ch
+        }
+
+        .peer-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0;
+            margin: 0 0 22px;
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            background: #fff
+        }
+
+        .peer-stats div {
+            padding: 12px 14px;
+            border-left: 1px solid var(--line)
+        }
+
+        .peer-stats div:first-child {
+            border-left: 0
+        }
+
+        .peer-stats dt {
+            font-size: 13px;
+            color: var(--ink-soft)
+        }
+
+        .peer-stats dd {
+            margin: 2px 0 0;
+            font: 700 20px var(--f-display);
+            font-variant-numeric: tabular-nums
+        }
+
+        .hist {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            height: 150px;
+            border-bottom: 2px solid var(--ink-faint);
+            padding-top: 20px
+        }
+
+        .hist div {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            height: 100%;
+            font-size: 13px;
+            font-variant-numeric: tabular-nums;
+            color: var(--ink-soft)
+        }
+
+        .hist div i {
+            display: block;
+            width: 100%;
+            background: #B8C6C2;
+            border-radius: 3px 3px 0 0;
+            margin-top: 4px
+        }
+
+        .hist div.me i {
+            background: var(--teal)
+        }
+
+        .hist div.me {
+            color: var(--teal);
+            font-weight: 700
+        }
+
+        .hist-x {
+            display: flex;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--ink-soft);
+            margin-top: 6px;
+            text-align: center
+        }
+
+        .hist-x span {
+            flex: 1;
+            line-height: 1.25
+        }
+
+        .hist-x span.me {
+            color: var(--teal);
+            font-weight: 700
+        }
+
+        .advice {
+            grid-column: 1/-1;
+            border-top: 1px solid var(--line);
+            padding-top: 36px;
+            display: grid;
+            grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+            gap: 56px
+        }
+
+        .advice h2 {
+            font-size: 27px
+        }
+
+        .advice ul {
+            margin: 0;
+            padding: 0;
+            list-style: none
+        }
+
+        .advice li {
+            padding: 12px 0 12px 22px;
+            border-top: 1px solid var(--line);
+            position: relative
+        }
+
+        .advice li:first-child {
+            border-top: 0;
+            padding-top: 0
+        }
+
+        .advice li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 1.05em;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--amber)
+        }
+
+        .advice li:first-child::before {
+            top: .55em
+        }
+
+        /* ---------- Statistik ---------- */
+        .figures {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 6px
+        }
+
+        .figures div {
+            padding: 20px 22px;
+            border-left: 1px solid var(--line)
+        }
+
+        .figures div:first-child {
+            border-left: 0
+        }
+
+        .figures dd {
+            margin: 0;
+            font: 700 34px/1.1 var(--f-display);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -.02em
+        }
+
+        .figures dd small {
+            font: 500 14px var(--f-body);
+            color: var(--ink-soft);
+            letter-spacing: 0;
+            margin-left: 4px
+        }
+
+        .figures dt {
+            font-size: 14px;
+            color: var(--ink-soft);
+            margin-top: 4px
+        }
+
+        .block {
+            margin-top: 52px
+        }
+
+        .block-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+            flex-wrap: wrap
+        }
+
+        .insight {
+            background: #fff;
+            border-left: 4px solid var(--teal);
+            padding: 12px 16px;
+            border-radius: 0 4px 4px 0;
+            margin: 0 0 22px;
+            max-width: 70ch;
+            font-size: 15.5px
+        }
+
+        .stack {
+            display: flex;
+            height: 48px;
+            border-radius: 4px;
+            overflow: hidden;
+            gap: 2px
+        }
+
+        .stack div {
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            color: #fff;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden
+        }
+
+        .stack .k-Normal {
+            background: var(--ok)
+        }
+
+        .stack .k-Insomnia {
+            background: var(--warn)
+        }
+
+        .stack .k-SleepApnea {
+            background: var(--bad)
+        }
+
+        .legend {
+            display: flex;
+            gap: 28px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+            font-size: 15px
+        }
+
+        .legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .legend i {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            display: inline-block
+        }
+
+        .legend .k-Normal {
+            background: var(--ok)
+        }
+
+        .legend .k-Insomnia {
+            background: var(--warn)
+        }
+
+        .legend .k-SleepApnea {
+            background: var(--bad)
+        }
+
+        .pair {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px
+        }
+
+        .pair h3 {
+            font: 700 16px var(--f-body);
+            margin-bottom: 12px
+        }
+
+        .bar-row {
+            display: grid;
+            grid-template-columns: 96px 1fr 76px;
+            gap: 12px;
+            align-items: center;
+            padding: 7px 0;
+            font-size: 15px
+        }
+
+        .bar-row b {
+            text-align: right;
+            font-variant-numeric: tabular-nums
+        }
+
+        .bar-row .meter {
+            height: 14px;
+            border-radius: 3px
+        }
+
+        .bar-row .meter i {
+            border-radius: 3px
+        }
+
+        /* ---------- Panduan ---------- */
+        .tbl-wrap {
+            overflow-x: auto;
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 6px
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            min-width: 620px;
+            font-size: 15px
+        }
+
+        th {
+            text-align: left;
+            font-weight: 700;
+            padding: 12px 16px;
+            border-bottom: 2px solid var(--ink);
+            white-space: nowrap
+        }
+
+        td {
+            padding: 13px 16px;
+            border-bottom: 1px solid var(--line);
+            vertical-align: top
+        }
+
+        tbody tr:last-child td {
+            border-bottom: 0
+        }
+
+        td.strong {
+            font-weight: 700
+        }
+
+        td.good {
+            color: var(--ok);
+            font-weight: 700;
+            white-space: nowrap
+        }
+
+        .habits {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0 56px
+        }
+
+        .habit {
+            padding: 22px 0;
+            border-top: 1px solid var(--line)
+        }
+
+        .habit h3 {
+            font-size: 20px;
+            margin-bottom: 6px
+        }
+
+        .habit p {
+            color: var(--ink-soft)
+        }
+
+        .habit .target {
+            color: var(--ink);
+            font-weight: 600;
+            margin-top: 8px
+        }
+
+        .doctor {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-left: 4px solid var(--bad);
+            border-radius: 0 6px 6px 0;
+            padding: 22px 26px;
+            max-width: 72ch
+        }
+
+        .doctor h3 {
+            font-size: 20px;
+            margin-bottom: 8px
+        }
+
+        .doctor ul {
+            margin: 8px 0 0;
+            padding-left: 20px
+        }
+
+        .doctor li {
+            margin: 4px 0
+        }
+
+        /* ---------- Riwayat ---------- */
+        .head-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 18px
+        }
+
+        .head-row h2 {
+            font-size: 27px
+        }
+
+        .btn-quiet {
+            background: #fff;
+            border: 1px solid #C9A59E;
+            color: var(--bad);
+            font-weight: 700;
+            border-radius: 4px;
+            padding: 9px 16px;
+            cursor: pointer
+        }
+
+        .btn-quiet:hover {
+            background: var(--bad-bg)
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-weight: 700;
+            white-space: nowrap
+        }
+
+        .chip::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: currentColor
+        }
+
+        .chip.ok {
+            color: var(--ok)
+        }
+
+        .chip.warn {
+            color: var(--warn)
+        }
+
+        .chip.bad {
+            color: var(--bad)
+        }
+
+        .empty {
+            padding: 48px 24px;
+            text-align: center;
+            color: var(--ink-soft)
+        }
+
+        .empty h3 {
+            font-size: 22px;
+            color: var(--ink);
+            margin-bottom: 8px
+        }
+
+        .empty .btn {
+            margin-top: 18px
+        }
+
+        /* ---------- Footer ---------- */
+        footer {
+            background: var(--night);
+            color: #A5B8B8;
+            padding: 28px 0;
+            font-size: 14.5px
+        }
+
+        footer .wrap {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px 40px;
+            flex-wrap: wrap
+        }
+
+        footer strong {
+            color: #fff;
+            font-family: var(--f-display);
+            font-size: 16px
+        }
+
+        /* ---------- Chat ---------- */
+        .fab {
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            z-index: 50;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--teal);
+            color: #fff;
+            border: 0;
+            border-radius: 999px;
+            padding: 13px 20px 13px 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(17, 37, 45, .28)
+        }
+
+        .fab:hover {
+            background: var(--teal-dark)
+        }
+
+        .fab svg {
+            width: 20px;
+            height: 20px
+        }
+
+        .drawer {
+            position: fixed;
+            right: 24px;
+            bottom: 84px;
+            z-index: 50;
+            width: 390px;
+            max-width: calc(100vw - 32px);
+            height: 540px;
+            max-height: calc(100vh - 110px);
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            box-shadow: 0 18px 50px rgba(17, 37, 45, .28);
+            flex-direction: column;
+            overflow: hidden;
+            display: flex
+        }
+
+        .drawer[hidden] {
+            display: none !important
+        }
+
+        .drawer-head {
+            background: var(--night);
+            color: #fff;
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center
+        }
+
+        .drawer-head h4 {
+            font-size: 17px
+        }
+
+        .drawer-head p {
+            font-size: 13px;
+            color: #A5B8B8
+        }
+
+        .icon-btn {
+            background: none;
+            border: 0;
+            color: inherit;
+            cursor: pointer;
+            padding: 6px;
+            line-height: 0;
+            border-radius: 4px
+        }
+
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, .12)
+        }
+
+        .icon-btn svg {
+            width: 20px;
+            height: 20px
+        }
+
+        .msgs {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            background: var(--paper);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            font-size: 15px
+        }
+
+        .msg {
+            max-width: 88%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            line-height: 1.5;
+            overflow-wrap: anywhere
+        }
+
+        .msg.bot {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-top-left-radius: 2px;
+            align-self: flex-start
+        }
+
+        .msg.me {
+            background: var(--teal);
+            color: #fff;
+            border-top-right-radius: 2px;
+            align-self: flex-end
+        }
+
+        .msg.err {
+            background: var(--bad-bg);
+            border: 1px solid #E3B7AE;
+            color: #7B2A1D;
+            align-self: flex-start
+        }
+
+        .chips {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 10px 12px;
+            border-top: 1px solid var(--line);
+            background: #fff;
+            scrollbar-width: none
+        }
+
+        .chips button {
+            flex: none;
+            background: #fff;
+            border: 1px solid #B9C4C0;
+            border-radius: 999px;
+            padding: 6px 13px;
+            font-size: 14px;
+            cursor: pointer
+        }
+
+        .chips button:hover {
+            border-color: var(--teal);
+            color: var(--teal)
+        }
+
+        .composer {
+            display: flex;
+            gap: 8px;
+            padding: 12px;
+            border-top: 1px solid var(--line);
+            background: #fff
+        }
+
+        .composer input {
+            flex: 1;
+            min-width: 0;
+            border: 1px solid #B9C4C0;
+            border-radius: 4px;
+            padding: 10px 12px;
+            font: inherit;
+            outline: 0
+        }
+
+        .composer input:focus {
+            border-color: var(--teal);
+            box-shadow: 0 0 0 3px rgba(31, 94, 102, .18)
+        }
+
+        .composer .btn {
+            padding: 10px 16px;
+            font-size: 15px
+        }
+
+        .dots {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+            height: 1em
+        }
+
+        .dots i {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--ink-faint);
+            animation: blink 1.2s infinite both
+        }
+
+        .dots i:nth-child(2) {
+            animation-delay: .2s
+        }
+
+        .dots i:nth-child(3) {
+            animation-delay: .4s
+        }
+
+        @keyframes blink {
+
+            0%,
+            80%,
+            100% {
+                opacity: .25
+            }
+
+            40% {
+                opacity: 1
+            }
+        }
+
+        /* ---------- Modal ---------- */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 60;
+            background: rgba(17, 37, 45, .58);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px
+        }
+
+        .dialog {
+            background: #fff;
+            border-radius: 8px;
+            max-width: 580px;
+            width: 100%;
+            max-height: calc(100vh - 32px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden
+        }
+
+        .dialog-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 22px;
+            border-bottom: 1px solid var(--line)
+        }
+
+        .dialog-head h3 {
+            font-size: 20px
+        }
+
+        .dialog-head .icon-btn:hover {
+            background: var(--paper)
+        }
+
+        .dialog-body {
+            padding: 22px;
+            overflow-y: auto;
+            font-size: 16px
+        }
+
+        .dialog-body .loading {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--ink-soft)
+        }
+
+        .spin {
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--track);
+            border-top-color: var(--teal);
+            border-radius: 50%;
+            animation: spin .8s linear infinite
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .dialog-foot {
+            padding: 12px 22px;
+            border-top: 1px solid var(--line);
+            background: var(--paper);
+            font-size: 13.5px;
+            color: var(--ink-soft);
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center
+        }
+
+        /* ---------- Responsive ---------- */
+        @media (max-width:980px) {
+
+            .calc,
+            .report,
+            .advice {
+                grid-template-columns: 1fr
+            }
+
+            .report {
+                gap: 44px
+            }
+
+            .advice {
+                gap: 16px
+            }
+
+            .result {
+                position: static
+            }
+
+            .figures {
+                grid-template-columns: repeat(2, 1fr)
+            }
+
+            .figures div {
+                border-top: 1px solid var(--line)
+            }
+
+            .figures div:nth-child(odd) {
+                border-left: 0
+            }
+
+            .figures div:nth-child(-n+2) {
+                border-top: 0
+            }
+
+            .pair,
+            .habits {
+                grid-template-columns: 1fr;
+                gap: 28px 0
+            }
+        }
+
+        @media (max-width:620px) {
+            .wrap {
+                padding: 0 16px
+            }
+
+            .tab {
+                padding: 10px 9px;
+                font-size: 14.5px
+            }
+
+            .row2 .field:last-child {
+                margin-bottom: 22px
+            }
+
+            .hero {
+                padding-top: 30px
+            }
+
+            .hero p {
+                font-size: 16.5px
+            }
+
+            .sheet-pad {
+                padding: 22px 18px
+            }
+
+            .row2 {
+                grid-template-columns: 1fr;
+                gap: 0
+            }
+
+            .seg.g4 {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .peer-stats {
+                grid-template-columns: 1fr
+            }
+
+            .peer-stats div {
+                border-left: 0;
+                border-top: 1px solid var(--line)
+            }
+
+            .peer-stats div:first-child {
+                border-top: 0
+            }
+
+            .figures dd {
+                font-size: 28px
+            }
+
+            .figures div {
+                padding: 16px
+            }
+
+            .fab span {
+                display: none
+            }
+
+            .fab {
+                padding: 14px
+            }
+
+            .drawer {
+                right: 16px;
+                bottom: 78px
+            }
+
+            .prob-row {
+                grid-template-columns: 88px 1fr 48px
+            }
+
+            .bar-row {
+                grid-template-columns: 82px 1fr 64px
+            }
+        }
+
+        @media (prefers-reduced-motion:reduce) {
+            html {
+                scroll-behavior: auto
+            }
+
+            * {
+                animation-duration: .01ms !important;
+                transition-duration: .01ms !important
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="masthead">
+        <div class="wrap">
+            <div class="topbar">
+                <a class="brand" href="/" aria-label="Sistem Analisis Tidur, beranda">
+                    <svg viewBox="0 0 38 24" fill="none" stroke="#E5A93B" stroke-width="2.4" stroke-linejoin="round"
+                        aria-hidden="true">
+                        <path d="M1 3H8V12H14V19H21V8H27V15H32V3H37" />
+                    </svg>
+                    Sistem Analisis Tidur
+                </a>
+                <nav class="tabs" role="tablist" aria-label="Menu utama">
+                    <button type="button" class="tab" role="tab" id="tabBtn-kalkulator" data-tab="kalkulator"
+                        aria-selected="true">Kalkulator</button>
+                    <button type="button" class="tab" role="tab" id="tabBtn-statistik" data-tab="statistik"
+                        aria-selected="false">Statistik</button>
+                    <button type="button" class="tab" role="tab" id="tabBtn-panduan" data-tab="panduan"
+                        aria-selected="false">Panduan</button>
+                    <button type="button" class="tab" role="tab" id="tabBtn-riwayat" data-tab="riwayat"
+                        aria-selected="false">Riwayat</button>
+                </nav>
+            </div>
+            <div class="hero">
+                <h1 id="heroTitle">Periksa pola tidur Anda</h1>
+                <p id="heroLede">Isi sembilan data harian. Model memperkirakan apakah pola tidur Anda normal, mengarah
+                    ke insomnia, atau ke sleep apnea, lalu menjelaskan alasannya.</p>
+            </div>
+            <svg class="hypno-band" id="hypnoBand" viewBox="0 0 1200 92" preserveAspectRatio="none"
+                aria-hidden="true"></svg>
+        </div>
+    </header>
+
+    <main>
+        <div class="wrap">
+
+            <!-- ===================== KALKULATOR ===================== -->
+            <section class="panel" id="view-kalkulator" role="tabpanel" aria-labelledby="tabBtn-kalkulator"
+                data-has-result="{% if prediction_result %}1{% else %}0{% endif %}">
+                {% if error_message %}<div class="notice" role="alert"><strong>Analisis gagal.</strong> {{ error_message }}</div>{% endif %}
+
+                <div class="calc">
+                    <div class="sheet sheet-pad">
+                        <p class="lead">Semua isian sudah berisi nilai awal. Ubah sesuai kondisi Anda yang sebenarnya,
+                            lalu jalankan analisis.</p>
+
+                        <form id="sleepForm" method="POST" action="/#kalkulator">
+                            {% csrf_token %}
+                            <input type="hidden" id="genderInput" name="gender" value="{{ form_data.gender }}">
+                            <input type="hidden" id="bmiInput" name="bmi_category" value="{{ form_data.bmi_category }}">
+
+                            <fieldset>
+                                <legend>Profil</legend>
+                                <div class="row2">
+                                    <div class="field">
+                                        <span class="field-label" id="genderLabel">Jenis kelamin</span>
+                                        <div class="seg g2" role="group" aria-labelledby="genderLabel"
+                                            style="margin-top:8px">
+                                            <button type="button" data-val="Male"
+                                                class="seg-btn gender-btn{% if form_data.gender == 'Male' %} is-on{% endif %}"
+                                                aria-pressed="{% if form_data.gender == 'Male' %}true{% else %}false{% endif %}">Pria</button>
+                                            <button type="button" data-val="Female"
+                                                class="seg-btn gender-btn{% if form_data.gender == 'Female' %} is-on{% endif %}"
+                                                aria-pressed="{% if form_data.gender == 'Female' %}true{% else %}false{% endif %}">Wanita</button>
+                                        </div>
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label" for="ageInput"
+                                            style="display:block;margin-bottom:8px">Usia</label>
+                                        <div class="unit-input"><input id="ageInput" type="number" name="age"
+                                                min="18" max="85" inputmode="numeric"
+                                                value="{{ form_data.age }}" required><span>tahun</span></div>
+                                    </div>
+                                </div>
+                                <div class="row2" style="margin-top:14px">
+                                    <div class="field">
+                                        <label class="field-label" for="heightInput"
+                                            style="display:block;margin-bottom:8px">Tinggi badan</label>
+                                        <div class="unit-input"><input id="heightInput" type="number" name="height"
+                                                min="100" max="230" step="1" inputmode="numeric"
+                                                value="{{ form_data.height|default:170 }}" required><span>cm</span></div>
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label" for="weightInput"
+                                            style="display:block;margin-bottom:8px">Berat badan</label>
+                                        <div class="unit-input"><input id="weightInput" type="number" name="weight"
+                                                min="30" max="200" step="0.5" inputmode="decimal"
+                                                value="{{ form_data.weight|default:65 }}" required><span>kg</span></div>
+                                    </div>
+                                </div>
+                                <div id="bmiInfoBadge" style="margin-top:10px;font-size:13px;color:var(--ink-soft);display:flex;align-items:center;gap:8px">
+                                    <span>Kalkulasi BMI otomatis:</span>
+                                    <strong id="bmiValText" style="color:var(--teal)">22.5</strong>
+                                    <span id="bmiCatBadge" class="chip ok" style="font-size:11px;padding:2px 8px">Normal</span>
+                                </div>
+                            </fieldset>
+
+                            <fieldset>
+                                <legend>Tidur dan stres</legend>
+                                <div class="row2">
+                                    <div class="field">
+                                        <label class="field-label" for="sleepInput"
+                                            style="display:block;margin-bottom:8px">Durasi tidur per malam</label>
+                                        <div class="unit-input"><input id="sleepInput" type="number" name="sleep_duration"
+                                                min="3" max="11" step="0.1" inputmode="decimal"
+                                                value="{{ form_data.sleep_duration|unlocalize }}" required><span>jam</span></div>
+                                        <small style="color:var(--ink-faint);font-size:11px;display:block;margin-top:4px">Ideal dewasa: 7 – 9 jam</small>
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label" for="qualityInput"
+                                            style="display:block;margin-bottom:8px">Kualitas tidur (skala 1-10)</label>
+                                        <div class="unit-input"><input id="qualityInput" type="number" name="quality_of_sleep"
+                                                min="1" max="10" step="1" inputmode="numeric"
+                                                value="{{ form_data.quality_of_sleep }}" required><span>/ 10</span></div>
+                                        <small style="color:var(--ink-faint);font-size:11px;display:block;margin-top:4px">1 = sangat buruk, 10 = nyenyak</small>
+                                    </div>
+                                </div>
+                                <div class="row2" style="margin-top:14px">
+                                    <div class="field">
+                                        <label class="field-label" for="stressInput"
+                                            style="display:block;margin-bottom:8px">Tingkat stres (skala 1-10)</label>
+                                        <div class="unit-input"><input id="stressInput" type="number" name="stress_level"
+                                                min="1" max="10" step="1" inputmode="numeric"
+                                                value="{{ form_data.stress_level }}" required><span>/ 10</span></div>
+                                        <small style="color:var(--ink-faint);font-size:11px;display:block;margin-top:4px">1 = santai, 10 = sangat berat</small>
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label" for="activityInput"
+                                            style="display:block;margin-bottom:8px">Aktivitas fisik harian</label>
+                                        <div class="unit-input"><input id="activityInput" type="number" name="physical_activity_level"
+                                                min="0" max="180" step="5" inputmode="numeric"
+                                                value="{{ form_data.physical_activity_level }}" required><span>menit/hari</span></div>
+                                        <small style="color:var(--ink-faint);font-size:11px;display:block;margin-top:4px">Anjuran WHO: min. 30 menit</small>
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            <fieldset>
+                                <legend>Parameter kardiovaskular & gerak</legend>
+                                <div class="row2">
+                                    <div class="field">
+                                        <label class="field-label" for="heartRate"
+                                            style="display:block;margin-bottom:8px">Detak jantung saat istirahat</label>
+                                        <div class="unit-input"><input id="heartRate" type="number" name="heart_rate"
+                                                min="40" max="140" inputmode="numeric"
+                                                value="{{ form_data.heart_rate }}" required><span>bpm</span></div>
+                                        <small style="color:var(--ink-faint);font-size:11px;display:block;margin-top:4px">Normal santai: 60 – 100 bpm</small>
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label" for="dailySteps"
+                                            style="display:block;margin-bottom:8px">Langkah per hari</label>
+                                        <div class="unit-input"><input id="dailySteps" type="number" name="daily_steps"
+                                                min="500" max="30000" step="500" inputmode="numeric"
+                                                value="{{ form_data.daily_steps }}" required><span>langkah</span></div>
+                                        <small style="color:var(--ink-faint);font-size:11px;display:block;margin-top:4px">Target sehat: &gt; 6.000 langkah</small>
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            <div class="submit-row">
+                                <button type="submit" class="btn" id="submitBtn">Analisis pola tidur</button>
+                                <small>Hasil tersimpan otomatis di tab Riwayat.</small>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Hasil -->
+                    <aside class="sheet result" id="hasil" aria-live="polite">
+                        {% if prediction_result %}
+                        <div class="hypno-strip">
+                            <figure>
+                                <svg id="hypnoResult" viewBox="0 0 440 150" role="img"
+                                    aria-label="Ilustrasi pola tahapan tidur yang khas untuk hasil ini"></svg>
+                                <figcaption id="hypnoCaption"></figcaption>
+                            </figure>
+                        </div>
+                        <div class="verdict"
+                            data-kind="{% if prediction_result.class == 'Insomnia' %}insomnia{% elif prediction_result.class == 'Sleep Apnea' %}apnea{% else %}normal{% endif %}">
+                            <p class="kicker">Perkiraan model untuk pola tidur Anda</p>
+                            <h2>{{ prediction_result.class }}</h2>
+                            <p>{% if prediction_result.class == 'Insomnia' %}Data Anda mirip pola orang dengan
+                                insomnia.{% elif prediction_result.class == 'Sleep Apnea' %}Data Anda mirip pola orang
+                                dengan sleep apnea.{% else %}Data Anda mirip pola orang dengan tidur normal.{% endif %}
+                            </p>
+                            <p class="conf">Keyakinan model <strong class="num">{{ prediction_result.probability }}%</strong>.{% if prediction_result.probability < 70 %} Angkanya sedang, jadi
+                                    anggap ini petunjuk awal saja.{% endif %}</p>
+                        </div>
+                        <div class="probs">
+                            <h3>Peluang tiap kategori</h3>
+                            <div id="probList">
+                                {% for k, v in prediction_result.prob_dict.items %}
+                                <div class="prob-row{% if k == prediction_result.class %} top{% endif %}"
+                                    data-value="{{ v|unlocalize }}">
+                                    <span>{{ k }}</span>
+                                    <div class="meter"><i data-k="{{ k }}" style="width:{{ v|unlocalize }}%"></i></div>
+                                    <b>{{ v }}%</b>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="result-foot">
+                            <button type="button" class="btn-text" style="justify-self:start"
+                                data-ai-topic="prediction_result" data-prediction="{{ prediction_result.class }}"
+                                data-probability="{{ prediction_result.probability|unlocalize }}"
+                                data-stress="{{ form_data.stress_level }}" data-bmi="{{ form_data.bmi_category }}"
+                                data-sleep="{{ form_data.sleep_duration|unlocalize }}">Minta penjelasan dari
+                                Gemini</button>
+                            <p class="disclaimer">Ini alat bantu skrining dari data gaya hidup, bukan diagnosis. Jika
+                                keluhan tidur berlanjut, periksakan diri ke dokter.</p>
+                        </div>
+                        {% else %}
+                        <div class="result-empty">
+                            <h2>Hasil akan muncul di sini</h2>
+                            <p>Setelah Anda menekan “Analisis pola tidur”, Anda akan melihat kategori yang diperkirakan serta seberapa yakin model terhadap data Anda.</p>
+                        </div>
+                        {% endif %}
+                    </aside>
+                </div>
+            </section>
+
+            <!-- ===================== STATISTIK ===================== -->
+            <section class="panel" id="view-statistik" role="tabpanel" aria-labelledby="tabBtn-statistik" hidden>
+                <dl class="figures">
+                    <div>
+                        <dd class="num">{{ analytics.total_data }}<small>orang</small></dd>
+                        <dt>Responden dalam data</dt>
+                    </div>
+                    <div>
+                        <dd class="num">{{ analytics.avg_sleep }}<small>jam</small></dd>
+                        <dt>Rata-rata durasi tidur</dt>
+                    </div>
+                    <div>
+                        <dd class="num">{{ analytics.avg_quality }}<small>/ 10</small></dd>
+                        <dt>Rata-rata kualitas tidur</dt>
+                    </div>
+                    <div>
+                        <dd class="num">{{ analytics.avg_heart_rate }}<small>bpm</small></dd>
+                        <dt>Rata-rata detak jantung</dt>
+                    </div>
+                    <div>
+                        <dd class="num">{{ analytics.model_accuracy }}</dd>
+                        <dt>Akurasi model pada data uji</dt>
+                    </div>
+                </dl>
+
+                <section class="block">
+                    <div class="block-head">
+                        <div>
+                            <h2>Berapa banyak yang mengalami gangguan tidur?</h2>
+                            <p class="sub">Pembagian responden berdasarkan kategori tidur.</p>
+                        </div>
+                        <button type="button" class="btn-text" data-ai-topic="chart_analysis"
+                            data-chart-name="Sebaran kategori gangguan tidur">Minta penjelasan dari Gemini</button>
+                    </div>
+                    <div class="stack" id="chartStack" role="img" aria-label="Diagram proporsi kategori tidur"></div>
+                    <div class="legend" id="chartStackLegend"></div>
+                </section>
+
+                <section class="block">
+                    <div class="block-head">
+                        <div>
+                            <h2>Tidur dan stres di tiap kelompok</h2>
+                            <p class="sub">Rata-rata setiap kategori tidur.</p>
+                        </div>
+                        <button type="button" class="btn-text" data-ai-topic="chart_analysis"
+                            data-chart-name="Rata-rata durasi tidur dan stres per kategori">Minta penjelasan dari
+                            Gemini</button>
+                    </div>
+                    <p class="insight" id="insightSleep"></p>
+                    <div class="pair">
+                        <div>
+                            <h3>Durasi tidur (jam per malam)</h3>
+                            <div id="chartSleep"></div>
+                        </div>
+                        <div>
+                            <h3>Tingkat stres (skala 1–10)</h3>
+                            <div id="chartStress"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="block">
+                    <div class="block-head">
+                        <div>
+                            <h2>Aktivitas fisik di tiap kelompok</h2>
+                            <p class="sub">Rata-rata setiap kategori tidur.</p>
+                        </div>
+                        <button type="button" class="btn-text" data-ai-topic="chart_analysis"
+                            data-chart-name="Rata-rata aktivitas fisik dan langkah harian per kategori">Minta penjelasan
+                            dari Gemini</button>
+                    </div>
+                    <p class="insight" id="insightActivity"></p>
+                    <div class="pair">
+                        <div>
+                            <h3>Aktivitas fisik (menit per hari)</h3>
+                            <div id="chartActivity"></div>
+                        </div>
+                        <div>
+                            <h3>Langkah kaki (per hari)</h3>
+                            <div id="chartSteps"></div>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <!-- ===================== PANDUAN ===================== -->
+            <section class="panel" id="view-panduan" role="tabpanel" aria-labelledby="tabBtn-panduan" hidden>
+                <section>
+                    <h2 style="font-size:27px;margin-bottom:8px">Berapa jam tidur yang dibutuhkan?</h2>
+                    <p class="sub" style="color:var(--ink-soft);max-width:60ch;margin-bottom:22px">Rekomendasi durasi
+                        tidur menurut kelompok usia, merujuk pada pedoman WHO dan Sleep Foundation.</p>
+                    <div class="tbl-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Kelompok</th>
+                                    <th>Usia</th>
+                                    <th>Dianjurkan</th>
+                                    <th>Batas minimal</th>
+                                    <th>Manfaat utama</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="strong">Dewasa muda</td>
+                                    <td>18–25 tahun</td>
+                                    <td class="good">7–9 jam</td>
+                                    <td>6 jam</td>
+                                    <td>Memori lebih kuat dan emosi lebih stabil</td>
+                                </tr>
+                                <tr>
+                                    <td class="strong">Dewasa produktif</td>
+                                    <td>26–64 tahun</td>
+                                    <td class="good">7–9 jam</td>
+                                    <td>6 jam</td>
+                                    <td>Jantung pulih dan daya tahan tubuh terjaga</td>
+                                </tr>
+                                <tr>
+                                    <td class="strong">Lansia</td>
+                                    <td>65 tahun ke atas</td>
+                                    <td class="good">7–8 jam</td>
+                                    <td>5,5 jam</td>
+                                    <td>Fungsi otak tetap terjaga</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="block">
+                    <h2>Empat kebiasaan yang paling membantu</h2>
+                    <div class="habits" style="margin-top:18px">
+                        <div class="habit">
+                            <h3>Jam tidur yang konsisten</h3>
+                            <p>Tidur dan bangun pada jam yang sama setiap hari mengunci ritme sirkadian tubuh.</p>
+                            <p class="target">Target: selisih kurang dari 30 menit.</p>
+                        </div>
+                        <div class="habit">
+                            <h3>Jauhi layar di malam hari</h3>
+                            <p>Cahaya biru gawai menekan hormon melatonin. Matikan layar 45–60 menit sebelum tidur.</p>
+                            <p class="target">Target: pakai cahaya lampu yang hangat.</p>
+                        </div>
+                        <div class="habit">
+                            <h3>Atur suhu kamar dan kafein</h3>
+                            <p>Buat kamar sejuk, sekitar 20–22 °C, dan hindari kopi atau minuman berenergi 6 jam sebelum
+                                tidur.</p>
+                            <p class="target">Target: kafein terakhir sebelum pukul 14.00.</p>
+                        </div>
+                        <div class="habit">
+                            <h3>Tidur menyamping</h3>
+                            <p>Posisi menyamping mengurangi dengkuran dan risiko saluran napas menyempit saat tidur.</p>
+                            <p class="target">Target: hindari tidur telentang.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="block">
+                    <div class="doctor">
+                        <h3>Kapan perlu ke dokter</h3>
+                        <p>Hasil kalkulator tidak menggantikan pemeriksaan. Temui dokter bila Anda mengalami:</p>
+                        <ul>
+                            <li>Sulit tidur atau sering terbangun selama berminggu-minggu.</li>
+                            <li>Mendengkur keras, terbangun tersedak, atau mulut kering saat bangun.</li>
+                            <li>Mengantuk berat di siang hari sampai mengganggu aktivitas atau berkendara.</li>
+                        </ul>
+                    </div>
+                </section>
+            </section>
+
+            <!-- ===================== RIWAYAT ===================== -->
+            <section class="panel" id="view-riwayat" role="tabpanel" aria-labelledby="tabBtn-riwayat" hidden>
+                <div class="head-row">
+                    <div>
+                        <h2>Analisis yang tersimpan</h2>
+                        <p style="color:var(--ink-soft)">Menampilkan hingga 15 analisis terbaru dari database lokal.</p>
+                    </div>
+                    {% if history_list %}
+                    <form method="POST" action="/clear-history/" id="clearForm">{% csrf_token %}<button type="submit"
+                            class="btn-quiet">Hapus semua riwayat</button></form>
+                    {% endif %}
+                </div>
+                <div class="sheet">
+                    {% if history_list %}
+                    <div class="tbl-wrap" style="border:0">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Waktu</th>
+                                    <th>Profil</th>
+                                    <th>Tidur</th>
+                                    <th>Stres dan BMI</th>
+                                    <th>Jantung dan langkah</th>
+                                    <th>Hasil</th>
+                                    <th>Keyakinan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in history_list %}
+                                <tr>
+                                    <td class="num" style="white-space:nowrap">{{ item.created_at|date:"d M Y, H:i" }}
+                                    </td>
+                                    <td>{% if item.gender == 'Male' %}Pria{% else %}Wanita{% endif %}, {{ item.age }} th
+                                    </td>
+                                    <td class="num"><strong>{{ item.sleep_duration }} jam</strong><br><span
+                                            style="color:var(--ink-soft)">kualitas {{ item.quality_of_sleep }}/10</span>
+                                    </td>
+                                    <td>Stres {{ item.stress_level }}<br><span style="color:var(--ink-soft)">BMI {% if item.bmi_category == 'Normal Weight' %}kurang{% elif item.bmi_category == 'Overweight' %}berlebih{% elif item.bmi_category == 'Obese' %}obesitas{% else %}normal{% endif %}</span></td>
+                                    <td class="num">{{ item.heart_rate }} bpm<br><span style="color:var(--ink-soft)">{{ item.daily_steps }} langkah</span></td>
+                                    <td><span
+                                            class="chip {% if item.prediction == 'Normal' %}ok{% elif item.prediction == 'Insomnia' %}warn{% else %}bad{% endif %}">{{ item.prediction }}</span></td>
+                                    <td class="num"><strong>{{ item.probability|floatformat:1 }}%</strong></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty">
+                        <h3>Belum ada riwayat</h3>
+                        <p>Setiap analisis yang Anda jalankan akan tersimpan di sini.</p>
+                        <button type="button" class="btn" data-tab="kalkulator">Mulai analisis pertama</button>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <footer>
+        <div class="wrap">
+            <div><strong>Sistem Analisis Tidur</strong> &nbsp;Tugas mata kuliah Sistem Cerdas. Model Random Forest dilatih dari
+                data {{ analytics.total_data }} responden.</div>
+            <div>Alat bantu skrining, bukan pengganti pemeriksaan dokter.</div>
+        </div>
+    </footer>
+
+    <!-- Asisten -->
+    <button type="button" class="fab" id="fab" aria-controls="chatDrawer" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" />
+        </svg>
+        <span>Tanya asisten</span>
+    </button>
+
+    <div class="drawer" id="chatDrawer" role="dialog" aria-label="Asisten tidur" hidden>
+        <div class="drawer-head">
+            <div>
+                <h4>Asisten tidur</h4>
+                <p>Tanya tentang insomnia, sleep apnea, atau cara kerja model.</p>
+            </div>
+            <button type="button" class="icon-btn" id="chatClose" aria-label="Tutup asisten"><svg viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                    <path d="M6 6l12 12M18 6L6 18" />
+                </svg></button>
+        </div>
+        <div class="msgs" id="chatMessages" aria-live="polite">
+            <div class="msg bot">Halo, saya asisten tidur Sistem Analisis Tidur. Silakan tanya soal kebiasaan tidur, insomnia,
+                sleep apnea, atau arti hasil analisis Anda.</div>
+        </div>
+        <div class="chips">
+            <button type="button" data-prompt="Tips mengatasi insomnia malam hari">Tips insomnia</button>
+            <button type="button" data-prompt="Apa tanda-tanda Sleep Apnea?">Tanda sleep apnea</button>
+            <button type="button" data-prompt="Berapa durasi tidur ideal untuk usia saya?">Durasi ideal</button>
+        </div>
+        <div class="composer">
+            <input id="chatInputText" type="text" placeholder="Tulis pertanyaan Anda" aria-label="Pertanyaan Anda"
+                autocomplete="off">
+            <button type="button" class="btn" id="chatSend">Kirim</button>
+        </div>
+    </div>
+
+    <!-- Penjelasan AI -->
+    <div class="overlay" id="modalAIExplanation" hidden>
+        <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="aiTitle">
+            <div class="dialog-head">
+                <h3 id="aiTitle">Penjelasan dari Gemini</h3>
+                <button type="button" class="icon-btn" data-close-ai aria-label="Tutup"><svg viewBox="0 0 24 24"
+                        width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        aria-hidden="true">
+                        <path d="M6 6l12 12M18 6L6 18" />
+                    </svg></button>
+            </div>
+            <div class="dialog-body">
+                <div id="modalAILoader" class="loading">
+                    <div class="spin"></div><span>Menyusun penjelasan…</span>
+                </div>
+                <div id="modalAIResultText" style="white-space:pre-line" hidden></div>
+            </div>
+            <div class="dialog-foot"><span>Penjelasan dibuat otomatis dan bersifat umum.</span><button type="button"
+                    class="btn-text" data-close-ai>Tutup</button></div>
+        </div>
+    </div>
+
+    {{ analytics|json_script:"analytics-data" }}
+    {% if peer_comparison %}{{ peer_comparison|json_script:"peer-data" }}{% endif %}
+
+    <script>
+        (function () {
+            'use strict';
+            var $ = function (s, r) { return (r || document).querySelector(s) }, $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)) };
+            var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') }
+            function md(t) { return esc(t || '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/\n/g, '<br>') }
+            function id1(n, d) { return Number(n).toLocaleString('id-ID', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 }) }
+
+            /* ---------- Hipnogram ---------- */
+            // Tahap: 0 bangun, 1 REM, 2 tidur ringan, 3 tidur dalam. Titik = [posisi 0-100, tahap]
+            var HYPNO = {
+                normal: [[0, 0], [4, 2], [8, 3], [18, 3], [22, 2], [27, 1], [31, 2], [38, 3], [47, 3], [51, 2], [56, 1], [62, 2], [68, 3], [72, 2], [76, 1], [84, 2], [88, 1], [93, 2], [96, 0], [100, 0]],
+                insomnia: [[0, 0], [23, 0], [26, 2], [30, 3], [36, 2], [40, 0], [46, 0], [49, 2], [55, 3], [59, 2], [64, 1], [68, 0], [74, 0], [77, 2], [82, 1], [86, 0], [100, 0]],
+                apnea: [[0, 0], [4, 2], [8, 3], [12, 2], [13, 1], [15, 2], [18, 3], [21, 2], [22, 0], [23, 2], [27, 3], [30, 2], [32, 1], [34, 2], [36, 0], [37, 2], [42, 3], [45, 2], [47, 1], [49, 2], [51, 0], [52, 2], [57, 2], [60, 1], [62, 2], [64, 0], [65, 2], [70, 3], [73, 2], [75, 0], [76, 2], [82, 1], [85, 2], [87, 0], [90, 2], [94, 0], [100, 0]]
+            };
+            var HYPNO_NOTE = {
+                normal: 'Pola khas: tidur turun bertahap dari ringan ke dalam, lalu REM, dan berulang beberapa siklus. Ini ilustrasi, bukan rekaman tidur Anda.',
+                insomnia: 'Pola khas: lama terjaga sebelum tidur dan sering terbangun, sehingga tidur dalam berkurang. Ini ilustrasi, bukan rekaman tidur Anda.',
+                apnea: 'Pola khas: napas terhenti berulang memotong tidur dengan bangun singkat sepanjang malam. Ini ilustrasi, bukan rekaman tidur Anda.'
+            };
+            function stepPath(pts, x0, x1, y0, y1) {
+                var w = x1 - x0, h = y1 - y0, d = '';
+                pts.forEach(function (p, i) { var x = (x0 + p[0] / 100 * w).toFixed(1), y = (y0 + p[1] / 3 * h).toFixed(1); d += (i ? 'H' + x + 'V' + y : 'M' + x + ' ' + y) });
+                return d;
+            }
+            function animateDraw(path) {
+                if (reduced || !path.getTotalLength) return;
+                var L = path.getTotalLength();
+                path.style.strokeDasharray = L; path.style.strokeDashoffset = L;
+                path.getBoundingClientRect();
+                path.style.transition = 'stroke-dashoffset 1.6s ease-out';
+                path.style.strokeDashoffset = 0;
+            }
+            function drawBand() {
+                var svg = $('#hypnoBand'); if (!svg) return;
+                var d = stepPath(HYPNO.normal, 0, 1200, 14, 76);
+                svg.innerHTML = '<path d="' + d + '" fill="none" stroke="#E5A93B" stroke-width="2.5" stroke-linejoin="round" opacity=".85"/>';
+                animateDraw(svg.firstChild);
+            }
+            function drawResult() {
+                var svg = $('#hypnoResult'); if (!svg) return;
+                var kind = $('.verdict').getAttribute('data-kind');
+                var labels = ['Bangun', 'REM', 'Ringan', 'Dalam'], g = '';
+                labels.forEach(function (t, i) {
+                    var y = 14 + i / 3 * 104;
+                    g += '<line x1="64" x2="436" y1="' + y + '" y2="' + y + '" stroke="#fff" stroke-opacity=".12"/>';
+                    g += '<text x="0" y="' + (y + 4) + '" fill="#9FB3B3" font-size="12">' + t + '</text>';
+                });
+                g += '<text x="64" y="146" fill="#9FB3B3" font-size="12">Malam</text><text x="436" y="146" fill="#9FB3B3" font-size="12" text-anchor="end">Pagi</text>';
+                g += '<path d="' + stepPath(HYPNO[kind], 64, 436, 14, 118) + '" fill="none" stroke="#E5A93B" stroke-width="2.6" stroke-linejoin="round"/>';
+                svg.innerHTML = g;
+                animateDraw(svg.lastChild);
+                $('#hypnoCaption').textContent = HYPNO_NOTE[kind];
+            }
+
+            /* ---------- Tab ---------- */
+            var TABS = {
+                kalkulator: ['Periksa pola tidur Anda', 'Isi sembilan data harian. Model memperkirakan apakah pola tidur Anda normal, mengarah ke insomnia, atau ke sleep apnea, lalu menjelaskan alasannya.'],
+                statistik: ['Gambaran data responden', 'Ringkasan dataset Sleep Health and Lifestyle yang dipakai untuk melatih model, dibaca per kategori tidur.'],
+                panduan: ['Panduan tidur sehat', 'Kebutuhan tidur menurut usia, empat kebiasaan yang paling membantu, dan tanda untuk segera ke dokter.'],
+                riwayat: ['Riwayat analisis', 'Semua hasil yang pernah Anda jalankan tersimpan di sini, dari yang terbaru.']
+            };
+            function switchMainTab(key, silent) {
+                if (!TABS[key]) key = 'kalkulator';
+                Object.keys(TABS).forEach(function (k) {
+                    var v = document.getElementById('view-' + k), b = document.getElementById('tabBtn-' + k);
+                    if (v) v.hidden = (k !== key);
+                    if (b) b.setAttribute('aria-selected', k === key ? 'true' : 'false');
+                });
+                $('#heroTitle').textContent = TABS[key][0];
+                $('#heroLede').textContent = TABS[key][1];
+                if (!silent && history.replaceState) history.replaceState(null, '', '#' + key);
+            }
+            window.switchMainTab = switchMainTab;
+            $$('[data-tab]').forEach(function (b) { b.addEventListener('click', function () { switchMainTab(b.getAttribute('data-tab')); window.scrollTo({ top: 0 }) }) });
+            function tabFromHash() { var h = location.hash.replace('#', '').replace(/^view-/, ''); return TABS[h] ? h : 'kalkulator' }
+            window.addEventListener('hashchange', function () { switchMainTab(tabFromHash(), true) });
+
+            /* ---------- Form & Real-time BMI ---------- */
+            function calculateBMI() {
+                var hEl = document.getElementById('heightInput');
+                var wEl = document.getElementById('weightInput');
+                var h = parseFloat(hEl ? hEl.value : 170) || 170;
+                var w = parseFloat(wEl ? wEl.value : 65) || 65;
+                var bmi = w / Math.pow(h / 100, 2);
+                var cat = 'Normal', label = 'Normal', cls = 'ok';
+
+                if (bmi < 18.5) {
+                    cat = 'Normal Weight';
+                    label = 'Kurang (< 18.5)';
+                    cls = 'warn';
+                } else if (bmi < 25.0) {
+                    cat = 'Normal';
+                    label = 'Normal (18.5 – 24.9)';
+                    cls = 'ok';
+                } else if (bmi < 30.0) {
+                    cat = 'Overweight';
+                    label = 'Berlebih (25.0 – 29.9)';
+                    cls = 'warn';
+                } else {
+                    cat = 'Obese';
+                    label = 'Obesitas (≥ 30.0)';
+                    cls = 'bad';
+                }
+
+                var bmiInp = document.getElementById('bmiInput');
+                if (bmiInp) bmiInp.value = cat;
+
+                var bmiValText = document.getElementById('bmiValText');
+                if (bmiValText) bmiValText.textContent = bmi.toFixed(1);
+
+                var badge = document.getElementById('bmiCatBadge');
+                if (badge) {
+                    badge.className = 'chip ' + cls;
+                    badge.textContent = label;
+                }
+            }
+            var hInput = document.getElementById('heightInput');
+            var wInput = document.getElementById('weightInput');
+            if (hInput) hInput.addEventListener('input', calculateBMI);
+            if (wInput) wInput.addEventListener('input', calculateBMI);
+            calculateBMI();
+
+            function bindSeg(sel, inputId) {
+                var btns = $$(sel), inp = document.getElementById(inputId);
+                btns.forEach(function (b) {
+                    b.addEventListener('click', function () {
+                        btns.forEach(function (x) { x.classList.remove('is-on'); x.setAttribute('aria-pressed', 'false') });
+                        b.classList.add('is-on'); b.setAttribute('aria-pressed', 'true');
+                        if (inp) inp.value = b.getAttribute('data-val');
+                    })
+                });
+            }
+            bindSeg('.gender-btn', 'genderInput');
+            var form = $('#sleepForm'), submitBtn = $('#submitBtn');
+            if (form) form.addEventListener('submit', function () { submitBtn.disabled = true; submitBtn.textContent = 'Menganalisis…' });
+            window.addEventListener('pageshow', function () { if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Analisis pola tidur' } });
+            var clearForm = $('#clearForm');
+            if (clearForm) clearForm.addEventListener('submit', function (e) { if (!confirm('Hapus seluruh riwayat analisis? Tindakan ini tidak bisa dibatalkan.')) e.preventDefault() });
+
+            /* ---------- Hasil: urutan peluang, faktor, histogram ---------- */
+            function sortProbs() {
+                var box = $('#probList'); if (!box) return;
+                $$('.prob-row', box).sort(function (a, b) { return parseFloat(b.dataset.value) - parseFloat(a.dataset.value) }).forEach(function (n) { box.appendChild(n) });
+            }
+            function sizeFactors() {
+                $$('.factor[data-impact]').forEach(function (f) {
+                    var v = Math.abs(parseFloat(f.dataset.impact)) || 0, w = Math.min(v / 40, 1) * 50;
+                    f.querySelector('.diverge i').style.width = w + '%';
+                });
+            }
+            function drawPeer() {
+                var el = document.getElementById('peer-data'); if (!el) return;
+                var P = JSON.parse(el.textContent), hist = $('#peerHist'), x = $('#peerHistX'); if (!hist) return;
+                var edges = [4.5, 5.5, 6.5, 7.5, 8.5, 9.5], me = -1;
+                for (var i = 0; i < edges.length - 1; i++) { if (P.user_sleep >= edges[i] && (P.user_sleep < edges[i + 1] || i === edges.length - 2)) { me = i; break } }
+                if (P.user_sleep < edges[0]) me = 0;
+                var max = Math.max.apply(null, P.hist_data.concat([1]));
+                hist.innerHTML = P.hist_data.map(function (n, i) { return '<div class="' + (i === me ? 'me' : '') + '">' + n + '<i style="height:' + Math.max(n / max * 100, 2) + '%"></i></div>' }).join('');
+                x.innerHTML = P.hist_labels.map(function (l, i) { return '<span class="' + (i === me ? 'me' : '') + '">' + esc(l.replace(' Jam', '')) + (i === me ? '<br>(Anda)' : '') + '</span>' }).join('');
+            }
+            $$('.js-md').forEach(function (n) { n.innerHTML = md(n.textContent) });
+
+            /* ---------- Statistik ---------- */
+            var ORDER = ['Normal', 'Insomnia', 'Sleep Apnea'];
+            function ordered(labels, arrs) {
+                var idx = ORDER.map(function (k) { return labels.indexOf(k) }).filter(function (i) { return i > -1 });
+                return { labels: idx.map(function (i) { return labels[i] }), arrs: arrs.map(function (a) { return idx.map(function (i) { return a[i] }) }) };
+            }
+            function kcls(l) { return 'k-' + l.replace(/\s/g, '') }
+            function bars(el, labels, vals, max, fmt) {
+                el.innerHTML = labels.map(function (l, i) { return '<div class="bar-row"><span>' + esc(l) + '</span><div class="meter"><i data-k="' + esc(l) + '" style="width:' + (vals[i] / max * 100) + '%"></i></div><b>' + fmt(vals[i]) + '</b></div>' }).join('');
+            }
+            function argmin(a) { return a.indexOf(Math.min.apply(null, a)) }
+            function argmax(a) { return a.indexOf(Math.max.apply(null, a)) }
+            function drawStats() {
+                var el = document.getElementById('analytics-data'); if (!el) return;
+                var A = JSON.parse(el.textContent);
+                TABS.statistik[0] = 'Gambaran data ' + A.total_data + ' responden';
+                if (!$('#view-statistik').hidden) $('#heroTitle').textContent = TABS.statistik[0];
+                var d = ordered(A.dist_labels, [A.dist_values]), tot = d.arrs[0].reduce(function (a, b) { return a + b }, 0);
+                $('#chartStack').innerHTML = d.labels.map(function (l, i) { var p = d.arrs[0][i] / tot * 100; return '<div class="' + kcls(l) + '" style="flex:' + d.arrs[0][i] + '" title="' + esc(l) + ': ' + d.arrs[0][i] + ' orang">' + (p > 12 ? id1(p) + '%' : '') + '</div>' }).join('');
+                $('#chartStackLegend').innerHTML = d.labels.map(function (l, i) { return '<span><i class="' + kcls(l) + '"></i>' + esc(l) + ': <strong class="num">' + d.arrs[0][i] + ' orang (' + id1(d.arrs[0][i] / tot * 100) + '%)</strong></span>' }).join('');
+
+                var s = ordered(A.chart_categories, [A.chart_sleep_durations, A.chart_stress_levels]);
+                bars($('#chartSleep'), s.labels, s.arrs[0], 10, function (v) { return id1(v, 2) + ' jam' });
+                bars($('#chartStress'), s.labels, s.arrs[1], 10, function (v) { return id1(v, 1) });
+                var a = s.arrs[0], b = s.arrs[1];
+                var iS = argmin(a), iT = argmax(b);
+                $('#insightSleep').textContent = iS === iT
+                    ? 'Kelompok ' + s.labels[iS] + ' tidur paling singkat (' + id1(a[iS], 2) + ' jam per malam) sekaligus paling tertekan (stres ' + id1(b[iT], 1) + ' dari 10).'
+                    : 'Kelompok ' + s.labels[iS] + ' tidur paling singkat (' + id1(a[iS], 2) + ' jam per malam), sedangkan kelompok ' + s.labels[iT] + ' paling tertekan (stres ' + id1(b[iT], 1) + ' dari 10).';
+
+                var c = ordered(A.activity_labels, [A.activity_values, A.steps_values]);
+                bars($('#chartActivity'), c.labels, c.arrs[0], Math.max.apply(null, c.arrs[0]) * 1.25, function (v) { return id1(v) + ' menit' });
+                bars($('#chartSteps'), c.labels, c.arrs[1], Math.max.apply(null, c.arrs[1]) * 1.25, function (v) { return id1(v) });
+                var x = c.arrs[0], y = c.arrs[1];
+                var iA = argmin(x), iP = argmin(y);
+                $('#insightActivity').textContent = iA === iP
+                    ? 'Kelompok ' + c.labels[iA] + ' paling sedikit bergerak: ' + id1(x[iA]) + ' menit aktivitas dan ' + id1(y[iP]) + ' langkah per hari.'
+                    : 'Kelompok ' + c.labels[iA] + ' paling sedikit beraktivitas (' + id1(x[iA]) + ' menit per hari), sedangkan langkah paling sedikit ada pada kelompok ' + c.labels[iP] + ' (' + id1(y[iP]) + ' langkah per hari).';
+            }
+
+            /* ---------- Penjelasan AI ---------- */
+            function aiContext(el) {
+                var t = el.dataset.aiTopic;
+                if (t === 'prediction_result') return { prediction: el.dataset.prediction, probability: el.dataset.probability, stress_level: el.dataset.stress, bmi_category: el.dataset.bmi, sleep_duration: el.dataset.sleep };
+                if (t === 'peer_distribution') return { percentile: el.dataset.percentile, user_sleep: el.dataset.userSleep, median_sleep: el.dataset.medianSleep };
+                return { chart_name: el.dataset.chartName };
+            }
+            var lastFocus = null;
+            function requestAIExplanation(topic, ctx) {
+                var modal = $('#modalAIExplanation'), loader = $('#modalAILoader'), out = $('#modalAIResultText');
+                lastFocus = document.activeElement;
+                loader.hidden = false; out.hidden = true; out.innerHTML = ''; modal.hidden = false;
+                $('[data-close-ai]', modal).focus();
+                fetch('/api/explain/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ topic: topic, context_data: ctx }) })
+                    .then(function (r) { return r.json() })
+                    .then(function (d) { loader.hidden = true; out.hidden = false; out.innerHTML = md(d.explanation || 'Analisis selesai, tetapi tidak ada teks yang dikembalikan.') })
+                    .catch(function (e) { loader.hidden = true; out.hidden = false; out.textContent = 'Penjelasan belum bisa dimuat. Periksa koneksi lalu coba lagi. (' + e + ')' });
+            }
+            function closeAIModal() { $('#modalAIExplanation').hidden = true; if (lastFocus && lastFocus.focus) lastFocus.focus() }
+            window.requestAIExplanation = requestAIExplanation; window.closeAIModal = closeAIModal;
+            $$('[data-ai-topic]').forEach(function (b) { b.addEventListener('click', function () { requestAIExplanation(b.dataset.aiTopic, aiContext(b)) }) });
+            $$('[data-close-ai]').forEach(function (b) { b.addEventListener('click', closeAIModal) });
+            $('#modalAIExplanation').addEventListener('click', function (e) { if (e.target === this) closeAIModal() });
+
+            /* ---------- Chat ---------- */
+            var drawer = $('#chatDrawer'), fab = $('#fab'), box = $('#chatMessages'), inp = $('#chatInputText');
+            function toggleChatDrawer() {
+                var open = drawer.hidden; drawer.hidden = !open; fab.setAttribute('aria-expanded', open ? 'true' : 'false');
+                if (open) inp.focus();
+            }
+            window.toggleChatDrawer = toggleChatDrawer;
+            fab.addEventListener('click', toggleChatDrawer); $('#chatClose').addEventListener('click', toggleChatDrawer);
+            function addMsg(cls, html) { var d = document.createElement('div'); d.className = 'msg ' + cls; d.innerHTML = html; box.appendChild(d); box.scrollTop = box.scrollHeight; return d }
+            function sendChatMessage() {
+                var text = inp.value.trim(); if (!text) return;
+                addMsg('me', esc(text)); inp.value = '';
+                var wait = addMsg('bot', '<span class="dots" aria-label="Asisten sedang menjawab"><i></i><i></i><i></i></span>');
+                fetch('/api/chat/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text }) })
+                    .then(function (r) { return r.json() })
+                    .then(function (d) { wait.innerHTML = md(d.reply || 'Maaf, balasan belum bisa diproses.'); box.scrollTop = box.scrollHeight })
+                    .catch(function () { wait.className = 'msg err'; wait.textContent = 'Asisten tidak bisa dihubungi. Periksa koneksi lalu coba lagi.' });
+            }
+            function sendQuickPrompt(t) { inp.value = t; sendChatMessage() }
+            window.sendChatMessage = sendChatMessage; window.sendQuickPrompt = sendQuickPrompt;
+            $('#chatSend').addEventListener('click', sendChatMessage);
+            inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); sendChatMessage() } });
+            $$('[data-prompt]').forEach(function (b) { b.addEventListener('click', function () { sendQuickPrompt(b.dataset.prompt) }) });
+            document.addEventListener('keydown', function (e) {
+                if (e.key !== 'Escape') return;
+                if (!$('#modalAIExplanation').hidden) closeAIModal(); else if (!drawer.hidden) toggleChatDrawer();
+            });
+
+            /* ---------- Mulai ---------- */
+            switchMainTab(tabFromHash(), true);
+            drawBand(); drawResult(); sortProbs(); sizeFactors(); drawPeer(); drawStats();
+            var kal = $('#view-kalkulator');
+            if (kal && kal.dataset.hasResult === '1' && window.matchMedia('(max-width:980px)').matches) { var h = $('#hasil'); if (h) h.scrollIntoView({ block: 'start' }) }
+        })();
+    </script>
+</body>
+
+</html>
